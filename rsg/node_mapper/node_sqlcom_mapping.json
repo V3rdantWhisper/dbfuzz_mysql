@@ -1,0 +1,1763 @@
+{
+  "generated_at": "2026-03-03T17:46:24+08:00",
+  "grammar_file": "../parser_def_files/mysql_sql.y",
+  "queries_per_node": 200,
+  "mappings": [
+    {
+      "node": "alter_database_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_event_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_function_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_instance_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_logfile_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_procedure_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_resource_group_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_server_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_tablespace_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_undo_tablespace_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_user_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "alter_view_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "analyze_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "binlog_base64_event",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "call_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "change",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "check_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "checksum",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "clone_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "commit",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "create",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "create_index_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "create_resource_group_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "create_role_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "create_srs_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "create_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "deallocate",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "delete_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "describe_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "do_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_database_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_event_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_function_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_index_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_logfile_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_procedure_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_resource_group_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_role_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_server_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_srs_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_tablespace_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_trigger_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_undo_tablespace_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_user_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "drop_view_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "execute",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "explain_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "flush",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "get_diagnostics",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "grant",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "group_replication",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "handler_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "help",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "import_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "insert_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "install_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "keycache_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "kill",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "load_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "lock",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "optimize_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "preload_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "prepare",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "purge",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "release",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "rename",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "repair_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "replace_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "reset",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "resignal_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "restart_server_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "revoke",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "rollback",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "savepoint",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "select_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "set",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "set_resource_group_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "set_role_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_binary_logs_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_binlog_events_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_character_set_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_collation_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_columns_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_count_errors_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_count_warnings_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_database_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_event_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_function_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_procedure_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_table_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_trigger_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_user_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_create_view_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_databases_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_engine_logs_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_engine_mutex_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_engine_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_engines_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_errors_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_events_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_function_code_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_function_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_grants_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_keys_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_master_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_open_tables_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_plugins_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_privileges_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_procedure_code_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_procedure_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_processlist_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_profile_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_profiles_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_relaylog_events_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_replica_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_replicas_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_table_status_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_tables_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_triggers_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_variables_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "show_warnings_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "shutdown_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "signal_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "start",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "start_replica_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "stop_replica_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "truncate_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "uninstall",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "unlock",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "update_stmt",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "use",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    },
+    {
+      "node": "xa",
+      "sqlcom_values": null,
+      "sqlcom_names": null,
+      "dominant_sqlcom": -1,
+      "dominant_sqlcom_name": "UNKNOWN_-1",
+      "stats": {
+        "sqlcom_freq": {},
+        "status_freq": {},
+        "total_queries": 0,
+        "valid_queries": 0
+      }
+    }
+  ],
+  "sqlcom_to_nodes": {}
+}
