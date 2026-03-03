@@ -48,43 +48,50 @@
 // Utility: parse CLI args
 // ============================================================
 struct Config {
-    std::string queriesFile   = "./queries.tsv";
-    std::string logFile       = "/tmp/mysql_stderr.log";
-    std::string host          = "127.0.0.1";
-    int         port          = 3306;
-    std::string user          = "root";
-    std::string password      = "";
-    std::string database      = "node_mapper_db";
-    int         pollTimeoutMs = 100;   // ms to wait for SQLCOM_EXEC line
-    int         pollIntervalUs= 2000;  // µs between polls
+    std::string queriesFile     = "./queries.tsv";
+    std::string logFile         = "/tmp/mysql_stderr.log";
+    std::string host            = "127.0.0.1";
+    int         port            = 3306;
+    std::string user            = "root";
+    std::string password        = "";
+    std::string database        = "node_mapper_db";
+    int         pollTimeoutMs   = 100;   // ms to wait for SQLCOM_EXEC line
+    int         pollIntervalUs  = 2000;  // µs between polls
+    // Crash recovery
+    std::string setupScript     = "./setup_mysql.sh"; // path to setup_mysql.sh
+    int         maxQuickRetries = 3;                  // reconnect attempts before restarting mysqld
 };
 
 static void printUsage(const char *prog) {
     std::cerr << "Usage: " << prog << " [options]\n"
-              << "  --queries FILE        TSV queries file (node\\tSQL)\n"
-              << "  --log-file FILE       mysqld stderr log file\n"
-              << "  --host HOST           MySQL host (default 127.0.0.1)\n"
-              << "  --port PORT           MySQL port (default 3306)\n"
-              << "  --user USER           MySQL user (default root)\n"
-              << "  --password PASS       MySQL password (default empty)\n"
-              << "  --database DB         Working database (default node_mapper_db)\n"
-              << "  --poll-timeout-ms N   Max ms to wait for SQLCOM output (default 100)\n"
-              << "  --poll-interval-us N  Polling interval in µs (default 2000)\n";
+              << "  --queries FILE           TSV queries file (node\\tSQL)\n"
+              << "  --log-file FILE          mysqld stderr log file\n"
+              << "  --host HOST              MySQL host (default 127.0.0.1)\n"
+              << "  --port PORT              MySQL port (default 3306)\n"
+              << "  --user USER              MySQL user (default root)\n"
+              << "  --password PASS          MySQL password (default empty)\n"
+              << "  --database DB            Working database (default node_mapper_db)\n"
+              << "  --poll-timeout-ms N      Max ms to wait for SQLCOM output (default 100)\n"
+              << "  --poll-interval-us N     Polling interval in µs (default 2000)\n"
+              << "  --setup-script FILE      Path to setup_mysql.sh for mysqld restart (default ./setup_mysql.sh)\n"
+              << "  --max-quick-retries N    Reconnect attempts before restarting mysqld (default 3)\n";
 }
 
 static Config parseArgs(int argc, char **argv) {
     Config cfg;
     for (int i = 1; i < argc; i++) {
         std::string key = argv[i];
-        if (key == "--queries" && i + 1 < argc)          cfg.queriesFile    = argv[++i];
-        else if (key == "--log-file" && i + 1 < argc)    cfg.logFile        = argv[++i];
-        else if (key == "--host" && i + 1 < argc)        cfg.host           = argv[++i];
-        else if (key == "--port" && i + 1 < argc)        cfg.port           = std::stoi(argv[++i]);
-        else if (key == "--user" && i + 1 < argc)        cfg.user           = argv[++i];
-        else if (key == "--password" && i + 1 < argc)    cfg.password       = argv[++i];
-        else if (key == "--database" && i + 1 < argc)    cfg.database       = argv[++i];
-        else if (key == "--poll-timeout-ms" && i + 1 < argc)   cfg.pollTimeoutMs  = std::stoi(argv[++i]);
-        else if (key == "--poll-interval-us" && i + 1 < argc)  cfg.pollIntervalUs = std::stoi(argv[++i]);
+        if (key == "--queries" && i + 1 < argc)               cfg.queriesFile      = argv[++i];
+        else if (key == "--log-file" && i + 1 < argc)         cfg.logFile          = argv[++i];
+        else if (key == "--host" && i + 1 < argc)             cfg.host             = argv[++i];
+        else if (key == "--port" && i + 1 < argc)             cfg.port             = std::stoi(argv[++i]);
+        else if (key == "--user" && i + 1 < argc)             cfg.user             = argv[++i];
+        else if (key == "--password" && i + 1 < argc)         cfg.password         = argv[++i];
+        else if (key == "--database" && i + 1 < argc)         cfg.database         = argv[++i];
+        else if (key == "--poll-timeout-ms" && i + 1 < argc)  cfg.pollTimeoutMs    = std::stoi(argv[++i]);
+        else if (key == "--poll-interval-us" && i + 1 < argc) cfg.pollIntervalUs   = std::stoi(argv[++i]);
+        else if (key == "--setup-script" && i + 1 < argc)     cfg.setupScript      = argv[++i];
+        else if (key == "--max-quick-retries" && i + 1 < argc)cfg.maxQuickRetries  = std::stoi(argv[++i]);
         else if (key == "--help" || key == "-h") { printUsage(argv[0]); exit(0); }
         else { std::cerr << "Unknown option: " << key << "\n"; printUsage(argv[0]); exit(1); }
     }
@@ -136,6 +143,179 @@ static bool createDatabase(const std::string &db, const Config &cfg) {
     cleanUpConnection(tmp);
     mysql_close(&tmp);
     return true;
+}
+
+// ============================================================
+// Crash recovery helpers
+// ============================================================
+
+// Forward declaration — dropDatabase is defined below in MySQL connection helpers.
+static bool dropDatabase(const std::string &db, const Config &cfg);
+
+/**
+ * restartMysqld invokes "setup_mysql.sh restart" to bring mysqld back up.
+ * Returns true if the script exits with status 0.
+ */
+static bool restartMysqld(const Config &cfg) {
+    fprintf(stderr, "[executor] restarting mysqld via: %s restart\n",
+            cfg.setupScript.c_str());
+    std::string cmd = cfg.setupScript + " restart";
+    int ret = system(cmd.c_str());
+    if (ret != 0) {
+        fprintf(stderr, "[executor] WARNING: setup_mysql.sh restart returned %d\n", ret);
+        return false;
+    }
+    fprintf(stderr, "[executor] mysqld restarted successfully\n");
+    return true;
+}
+
+/**
+ * dropNonSystemRoles drops every role (account_locked='Y') that is not a
+ * built-in MySQL system account.  In MySQL 8.0, roles are stored in
+ * mysql.user with account_locked='Y'.  System accounts that must be kept:
+ *   mysql.sys, mysql.session, mysql.infoschema
+ *
+ * NOTE: DROP DATABASE does NOT remove roles — they are server-level objects.
+ * This function must be called explicitly to achieve proper inter-node
+ * isolation.
+ */
+static void dropNonSystemRoles(const Config &cfg) {
+    MYSQL tmp;
+    if (!mysql_init(&tmp)) return;
+    // Connect to the built-in 'mysql' database to query mysql.user.
+    if (!mysql_real_connect(&tmp, cfg.host.c_str(), cfg.user.c_str(),
+                             cfg.password.c_str(), "mysql", cfg.port,
+                             nullptr, 0)) {
+        fprintf(stderr, "[executor] dropNonSystemRoles: connect failed: %s\n",
+                mysql_error(&tmp));
+        mysql_close(&tmp);
+        return;
+    }
+
+    // Find all non-system locked accounts (= user-created roles in MySQL 8.0).
+    const char *q =
+        "SELECT user, host FROM mysql.user "
+        "WHERE account_locked = 'Y' "
+        "AND user NOT IN ('mysql.sys','mysql.session','mysql.infoschema','root')";
+
+    if (mysql_real_query(&tmp, q, strlen(q)) != 0) {
+        fprintf(stderr, "[executor] dropNonSystemRoles: query failed: %s\n",
+                mysql_error(&tmp));
+        mysql_close(&tmp);
+        return;
+    }
+
+    MYSQL_RES *res = mysql_store_result(&tmp);
+    if (!res) { mysql_close(&tmp); return; }
+
+    // Collect (user, host) pairs first, then drop them one by one.
+    std::vector<std::pair<std::string, std::string>> roles;
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(res))) {
+        if (row[0] && row[1])
+            roles.emplace_back(row[0], row[1]);
+    }
+    mysql_free_result(res);
+
+    int dropped = 0;
+    for (auto &[u, h] : roles) {
+        // Use DROP ROLE (semantically correct for roles in MySQL 8.0).
+        std::string dropCmd =
+            "DROP ROLE IF EXISTS '" + u + "'@'" + h + "'";
+        if (mysql_real_query(&tmp, dropCmd.c_str(), dropCmd.size()) == 0) {
+            MYSQL_RES *dr = mysql_store_result(&tmp);
+            if (dr) mysql_free_result(dr);
+            dropped++;
+        } else {
+            fprintf(stderr, "[executor] dropNonSystemRoles: failed to drop '%s'@'%s': %s\n",
+                    u.c_str(), h.c_str(), mysql_error(&tmp));
+        }
+    }
+
+    if (dropped > 0)
+        fprintf(stderr, "[executor] dropped %d non-system role(s)\n", dropped);
+
+    mysql_close(&tmp);
+}
+
+/**
+ * cleanupNodeState resets server-level state between node batches:
+ *   1. If connected: drop non-system roles, then close the connection.
+ *      If not connected (crash during previous node): restart mysqld first
+ *      (which gives a fully clean state, making explicit role cleanup
+ *      unnecessary).
+ *   2. Drop and recreate the working database.
+ *   3. Re-establish the main connection.
+ *
+ * This ensures that server-level objects created by one node's queries
+ * (e.g. roles, users, global state) do not affect the next node's queries.
+ */
+static void cleanupNodeState(const Config &cfg, MYSQL &conn, bool &connected) {
+    fprintf(stderr, "[executor] cleanupNodeState: resetting server state\n");
+
+    if (!connected) {
+        // Server is down from a crash during the previous node's queries.
+        // A full restart gives a completely clean server state — no need for
+        // explicit role cleanup afterwards.
+        fprintf(stderr,
+                "[executor] cleanupNodeState: server is down, restarting mysqld\n");
+        restartMysqld(cfg);
+        for (int attempt = 0; attempt < 30; attempt++) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            // Create the working database on the freshly started server.
+            if (createDatabase(cfg.database, cfg)) {
+                if (mysql_real_connect(&conn, cfg.host.c_str(), cfg.user.c_str(),
+                                       cfg.password.c_str(), cfg.database.c_str(),
+                                       cfg.port, nullptr, CLIENT_MULTI_STATEMENTS)) {
+                    connected = true;
+                    fprintf(stderr,
+                            "[executor] cleanupNodeState: reconnected after restart\n");
+                    return;
+                }
+                mysql_close(&conn);
+                mysql_init(&conn);
+            }
+            fprintf(stderr,
+                    "[executor] cleanupNodeState: post-restart reconnect attempt %d/30\n",
+                    attempt + 1);
+        }
+        fprintf(stderr,
+                "[executor] cleanupNodeState: WARNING: could not reconnect after restart\n");
+        return;
+    }
+
+    // Server is up: drop non-system roles explicitly.
+    // (DROP DATABASE does not remove roles; they are server-level objects.)
+    dropNonSystemRoles(cfg);
+
+    // Close the main connection before dropping its database.
+    mysql_close(&conn);
+    mysql_init(&conn);
+    connected = false;
+
+    // Drop and recreate the working database for a clean schema.
+    dropDatabase(cfg.database, cfg);
+    if (!createDatabase(cfg.database, cfg)) {
+        fprintf(stderr,
+                "[executor] cleanupNodeState: failed to recreate database %s\n",
+                cfg.database.c_str());
+        return;
+    }
+
+    // Reconnect to the fresh database.
+    if (mysql_real_connect(&conn, cfg.host.c_str(), cfg.user.c_str(),
+                           cfg.password.c_str(), cfg.database.c_str(),
+                           cfg.port, nullptr, CLIENT_MULTI_STATEMENTS)) {
+        connected = true;
+        fprintf(stderr,
+                "[executor] cleanupNodeState: reconnected with fresh state\n");
+    } else {
+        fprintf(stderr,
+                "[executor] cleanupNodeState: reconnect failed: %s\n",
+                mysql_error(&conn));
+        mysql_close(&conn);
+        mysql_init(&conn);
+    }
 }
 
 static bool dropDatabase(const std::string &db, const Config &cfg) {
@@ -257,28 +437,64 @@ executeOne(const std::string &sql, const Config &cfg, MYSQL &conn,
 
     // Reconnect if needed (e.g. after a crash).
     if (!connected) {
-        // Retry with backoff — mysqld may need a few seconds to restart.
-        const int maxRetries = 30;
         const int retryDelayMs = 1000;
         bool ok = false;
-        for (int attempt = 0; attempt < maxRetries; attempt++) {
+
+        // Phase 1: attempt maxQuickRetries fast reconnects.
+        // If mysqld is just recovering from a crash these should succeed quickly.
+        for (int attempt = 0; attempt < cfg.maxQuickRetries && !ok; attempt++) {
             std::this_thread::sleep_for(std::chrono::milliseconds(retryDelayMs));
             if (createDatabase(cfg.database, cfg)) {
                 if (mysql_real_connect(&conn, cfg.host.c_str(), cfg.user.c_str(),
                                        cfg.password.c_str(), cfg.database.c_str(),
                                        cfg.port, nullptr, CLIENT_MULTI_STATEMENTS)) {
                     ok = true;
-                    break;
+                } else {
+                    mysql_close(&conn);
+                    mysql_init(&conn);
                 }
-                mysql_close(&conn);
-                mysql_init(&conn);
             }
-            fprintf(stderr, "[executor] reconnect attempt %d/%d failed, retrying...\n",
-                    attempt + 1, maxRetries);
+            if (!ok)
+                fprintf(stderr, "[executor] quick reconnect attempt %d/%d failed\n",
+                        attempt + 1, cfg.maxQuickRetries);
         }
+
+        // Phase 2: if still disconnected after quick retries, restart mysqld.
         if (!ok) {
-            fprintf(stderr, "[executor] could not reconnect after %d attempts, giving up on this query\n", maxRetries);
-            return {-1, "no_sqlcom"};
+            fprintf(stderr,
+                    "[executor] %d quick reconnect attempts failed — "
+                    "restarting mysqld via %s\n",
+                    cfg.maxQuickRetries, cfg.setupScript.c_str());
+            restartMysqld(cfg);
+
+            // After restart the server state is completely clean.
+            // Try to reconnect for up to 30 seconds.
+            const int maxRetries = 30;
+            for (int attempt = 0; attempt < maxRetries && !ok; attempt++) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(retryDelayMs));
+                if (createDatabase(cfg.database, cfg)) {
+                    if (mysql_real_connect(&conn, cfg.host.c_str(), cfg.user.c_str(),
+                                           cfg.password.c_str(), cfg.database.c_str(),
+                                           cfg.port, nullptr, CLIENT_MULTI_STATEMENTS)) {
+                        ok = true;
+                    } else {
+                        mysql_close(&conn);
+                        mysql_init(&conn);
+                    }
+                }
+                if (!ok)
+                    fprintf(stderr,
+                            "[executor] post-restart reconnect attempt %d/%d failed\n",
+                            attempt + 1, maxRetries);
+            }
+        }
+
+        if (!ok) {
+            // All reconnect attempts exhausted: skip this query and mark as crash.
+            fprintf(stderr,
+                    "[executor] could not reconnect after mysqld restart — "
+                    "skipping query\n");
+            return {-1, "crash"};
         }
         connected = true;
         fprintf(stderr, "[executor] reconnected to MySQL\n");
@@ -403,8 +619,27 @@ int main(int argc, char **argv) {
     // Use line-buffered stdout so Go can read results in real time.
     setvbuf(stdout, nullptr, _IOLBF, 0);
 
+    // Track the current node to detect batch transitions.
+    // When the node changes we call cleanupNodeState() to drop server-level
+    // objects (roles, etc.) left by the previous node's queries, and to
+    // recreate the working database.  This is necessary because:
+    //   - DROP DATABASE does NOT remove roles (server-level objects in MySQL 8.0).
+    //   - Accumulated state from one node's queries can crash subsequent nodes.
+    std::string lastNode = "";
+
     for (std::size_t i = 0; i < total; i++) {
         const auto &rec = records[i];
+
+        // Node transition: clean up server state before starting a new node.
+        if (rec.node != lastNode) {
+            if (!lastNode.empty()) {
+                fprintf(stderr, "[executor] node transition: %s -> %s\n",
+                        lastNode.c_str(), rec.node.c_str());
+                cleanupNodeState(cfg, conn, connected);
+            }
+            lastNode = rec.node;
+            fprintf(stderr, "[executor] [node: %s]\n", rec.node.c_str());
+        }
 
         if ((i + 1) % 500 == 0) {
             fprintf(stderr, "[executor] progress: %zu/%zu (crashes: %d)\n",

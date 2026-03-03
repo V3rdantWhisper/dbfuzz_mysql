@@ -347,7 +347,7 @@ func writeQueriesFile(path string, records []QueryRecord) error {
 //	stdout → "node\tsqlcom_int\tstatus\n"
 //
 // The executor reads until EOF on stdin then exits.
-func runExecutor(executorBin, queriesFile, logFile, host string, port int, user, password, database string, pollTimeoutMs int) ([]ExecResult, error) {
+func runExecutor(executorBin, queriesFile, logFile, setupScript, host string, port int, user, password, database string, pollTimeoutMs, maxQuickRetries int) ([]ExecResult, error) {
 	args := []string{
 		"--queries", queriesFile,
 		"--log-file", logFile,
@@ -357,6 +357,8 @@ func runExecutor(executorBin, queriesFile, logFile, host string, port int, user,
 		"--password", password,
 		"--database", database,
 		"--poll-timeout-ms", strconv.Itoa(pollTimeoutMs),
+		"--setup-script", setupScript,
+		"--max-quick-retries", strconv.Itoa(maxQuickRetries),
 	}
 	cmd := exec.Command(executorBin, args...)
 	cmd.Stderr = os.Stderr // pass executor's own diagnostics through
@@ -511,6 +513,8 @@ func main() {
 	password := flag.String("password", "", "MySQL password")
 	database := flag.String("database", "node_mapper_db", "MySQL database name (created/dropped per query)")
 	pollTimeoutMs := flag.Int("poll-timeout-ms", 100, "Max ms to wait for SQLCOM_EXEC in mysqld stderr log")
+	setupScript := flag.String("setup-script", "./setup_mysql.sh", "Path to setup_mysql.sh for mysqld restart on hard failures")
+	maxQuickRetries := flag.Int("max-quick-retries", 3, "Reconnect attempts before triggering mysqld restart")
 	flag.Parse()
 
 	if *seed == 0 {
@@ -586,8 +590,8 @@ func main() {
 	log.Printf("[info] running executor: %s", *executorBin)
 	results, err := runExecutor(
 		*executorBin, *queriesFile, *logFile,
-		*host, *port, *user, *password, *database,
-		*pollTimeoutMs,
+		*setupScript, *host, *port, *user, *password, *database,
+		*pollTimeoutMs, *maxQuickRetries,
 	)
 	if err != nil {
 		log.Fatalf("executor error: %v", err)

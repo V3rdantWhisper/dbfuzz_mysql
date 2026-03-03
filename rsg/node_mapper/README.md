@@ -180,6 +180,8 @@ make run N=200 DEPTH=2 LOG_FILE=/tmp/mysql_stderr.log OUTPUT=./my_mapping.json
 | `-password` | _(空)_ | MySQL 密码 |
 | `-database` | `node_mapper_db` | 工作数据库名 |
 | `-poll-timeout-ms` | `100` | 等待 `SQLCOM_EXEC` 输出的最大毫秒数 |
+| `-setup-script` | `./setup_mysql.sh` | mysqld 崩溃后用于重启的脚本路径 |
+| `-max-quick-retries` | `3` | 触发 mysqld 重启前的快速重连尝试次数 |
 
 示例：以固定种子运行，每节点生成 50 条 SQL：
 

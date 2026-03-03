@@ -78,17 +78,19 @@ clean:
 # Override any variable on the command line, e.g.:
 #   make run LOG_FILE=/var/log/mysql/error.log N=300
 # ============================================================
-LOG_FILE    ?= /tmp/mysql_stderr.log
-GRAMMAR     ?= ../parser_def_files/mysql_sql.y
-OUTPUT      ?= ./node_sqlcom_mapping.json
-N           ?= 200
-DEPTH       ?= 2
-MYSQL_HOST  ?= 127.0.0.1
-MYSQL_PORT  ?= 3306
-MYSQL_USER  ?= root
-MYSQL_PASS  ?=
-# MYSQL_SOCKET?= /tmp/mysql_node_mapper.sock
-MYSQL_DB    ?= node_mapper_db
+LOG_FILE         ?= /tmp/mysql_stderr.log
+GRAMMAR          ?= ../parser_def_files/mysql_sql.y
+OUTPUT           ?= ./node_sqlcom_mapping.json
+N                ?= 200
+DEPTH            ?= 2
+MYSQL_HOST       ?= 127.0.0.1
+MYSQL_PORT       ?= 3306
+MYSQL_USER       ?= root
+MYSQL_PASS       ?=
+# MYSQL_SOCKET   ?= /tmp/mysql_node_mapper.sock
+MYSQL_DB         ?= node_mapper_db
+SETUP_SCRIPT     ?= ./setup_mysql.sh
+MAX_QUICK_RETRIES ?= 3
 
 .PHONY: run
 run: all
@@ -96,17 +98,19 @@ run: all
 	@echo "    MySQL stderr log: $(LOG_FILE)"
 	@echo "    (mysqld must be started with stderr redirected to $(LOG_FILE))"
 	./$(NODE_MAPPER_BIN) \
-		-grammar  "$(GRAMMAR)"     \
-		-executor "./$(EXECUTOR_BIN)" \
-		-log-file "$(LOG_FILE)"    \
-		-output   "$(OUTPUT)"      \
-		-n        "$(N)"           \
-		-depth    "$(DEPTH)"       \
-		-host     "$(MYSQL_HOST)"  \
-		-port     "$(MYSQL_PORT)"  \
-		-user     "$(MYSQL_USER)"  \
-		-password "$(MYSQL_PASS)"  \
-		-database "$(MYSQL_DB)"    
+		-grammar           "$(GRAMMAR)"           \
+		-executor          "./$(EXECUTOR_BIN)"    \
+		-log-file          "$(LOG_FILE)"          \
+		-output            "$(OUTPUT)"            \
+		-n                 "$(N)"                 \
+		-depth             "$(DEPTH)"             \
+		-host              "$(MYSQL_HOST)"        \
+		-port              "$(MYSQL_PORT)"        \
+		-user              "$(MYSQL_USER)"        \
+		-password          "$(MYSQL_PASS)"        \
+		-database          "$(MYSQL_DB)"          \
+		-setup-script      "$(SETUP_SCRIPT)"      \
+		-max-quick-retries "$(MAX_QUICK_RETRIES)" 
 
 .PHONY: help
 help:
@@ -127,4 +131,6 @@ help:
 	@echo "  MYSQL_PORT   MySQL port              (default: 3306)"
 	@echo "  MYSQL_USER   MySQL user              (default: root)"
 	@echo "  MYSQL_PASS   MySQL password          (default: empty)"
-	@echo "  MYSQL_DB     Working database        (default: node_mapper_db)"
+	@echo "  MYSQL_DB          Working database        (default: node_mapper_db)"
+	@echo "  SETUP_SCRIPT      Path to setup_mysql.sh  (default: ./setup_mysql.sh)"
+	@echo "  MAX_QUICK_RETRIES Reconnects before restart (default: 3)"
