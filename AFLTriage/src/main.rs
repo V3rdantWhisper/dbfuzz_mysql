@@ -99,7 +99,7 @@ arg_enum! {
 fn setup_command_line() -> ArgMatches<'static> {
     let mut app = App::new("afltriage")
                           .version(crate_version!())
-                          .author(crate_authors!("\n"))
+                          .author("\n")
                           .about(crate_description!())
                           .usage("afltriage -i <input>... -o <output> <command>...")
                           .setting(AppSettings::TrailingVarArg)
