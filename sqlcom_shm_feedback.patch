@@ -1,0 +1,44 @@
+--- a/sql/sql_parse.cc
++++ b/sql/sql_parse.cc
+@@ -24,6 +24,28 @@
+ 
+ #include <algorithm>
+ #include <atomic>
++
++/* ── SQLCOM SHM feedback (added for fuzzing) ───────────────────── */
++#include <fcntl.h>
++#include <sys/mman.h>
++#include <unistd.h>
++
++static std::atomic<bool> s_sqlcom_shm_init{false};
++static volatile int     *s_sqlcom_shm_ptr = nullptr;
++
++static void sqlcom_shm_init_once() {
++  /* Env var name must match SQLCOM_SHM_ENV_VAR in AFL/config.h */
++  const char *name = getenv("SQLCOM_SHM_NAME");
++  if (!name) return;
++  int fd = shm_open(name, O_RDWR, 0);
++  if (fd < 0) return;
++  void *p = mmap(nullptr, sizeof(int),
++                 PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
++  close(fd);
++  if (p != MAP_FAILED)
++    s_sqlcom_shm_ptr = reinterpret_cast<volatile int *>(p);
++}
++/* ── end SQLCOM SHM feedback ────────────────────────────────────── */
+ #include <climits>
+ #include <cstdint>
+ #include <cstdio>
+@@ -5324,6 +5346,13 @@
+   DEBUG_SYNC_C("sql_parse_after_rewrite");
+ 
+   if (!err) {
++    /* SQLCOM SHM feedback: write executed command id to shared memory. */
++    if (!s_sqlcom_shm_init.exchange(true, std::memory_order_acq_rel))
++      sqlcom_shm_init_once();
++    if (s_sqlcom_shm_ptr)
++      __atomic_store_n((int *)s_sqlcom_shm_ptr,
++                       static_cast<int>(thd->lex->sql_command),
++                       __ATOMIC_RELEASE);
+     thd->m_statement_psi = MYSQL_REFINE_STATEMENT(
+         thd->m_statement_psi, sql_statement_info[thd->lex->sql_command].m_key);
