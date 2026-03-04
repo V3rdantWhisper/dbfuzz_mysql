@@ -61,10 +61,18 @@ afl-fuzz.o: afl-fuzz.cpp $(DEPDIR)
 test-parser.o: test-parser.cpp $(DEPDIR)
 	$(COMPILE.c) -g $^ $(DEPEN_PATH) $(LDFLAGS)  -lmysqlclient $(PARSER_INCLUDE_PATH)
 
+# ── Independent test target (does not depend on AFL/MySQL build) ──
+test_sqlcom_slots: test_sqlcom_slots.cpp
+	g++ -std=c++17 -g -O0 -o $@ $<
+
+.PHONY: run-test-sqlcom
+run-test-sqlcom: test_sqlcom_slots
+	./test_sqlcom_slots
+
 .NOTPARALLEL: clean
 
 clean:
-	rm -rf $(PROGS)  .deps *.gch *.o
+	rm -rf $(PROGS)  .deps *.gch *.o test_sqlcom_slots
 
 $(DEPDIR): ; @mkdir -p $@
 

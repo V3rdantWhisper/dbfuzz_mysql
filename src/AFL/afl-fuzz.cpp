@@ -742,8 +742,16 @@ static u64  sqlcom_exec_count[MAX_SQLCOM];       /* per-SQLCOM exec counts */
 static u32  sqlcom_total_seen  = 0;              /* distinct SQLCOMs seen  */
 static int  last_sqlcom        = -1;             /* SQLCOM of last exec    */
 static u8   last_sqlcom_is_new = 0;              /* 1 if first time seen   */
-static unordered_map<string, int> g_node_to_sqlcom; /* node → dominant SQLCOM */
-static vector<string>             g_candidate_nodes; /* weighted pick pool  */
+
+/* One slot per reachable SQLCOM.  Each slot stores the SQLCOM integer
+ * (for inverse-frequency weighting) and all RSG grammar roots capable
+ * of producing that SQLCOM.  When a slot is picked, one root is chosen
+ * uniformly at random via UR(). */
+struct SqlcomSlot {
+  int             sqlcom_int;  /* SQLCOM index into sqlcom_exec_count[] */
+  vector<string>  roots;       /* RSG grammar roots that produce this   */
+};
+static vector<SqlcomSlot> g_sqlcom_slots; /* one slot per reachable SQLCOM */
 /* ── end SQLCOM SHM feedback globals ───────────────────────────── */
 
 static volatile u8 stop_soon, /* Ctrl-C pressed?                  */
@@ -2074,7 +2082,7 @@ static void cull_queue(void)
 
 /* ── SQLCOM SHM cleanup (registered via atexit) ─────────────────── */
 static void remove_sqlcom_shm(void) {
-  string name = string("/sqlcom_") + to_string(bind_to_core_id);
+  string name = string(SQLCOM_SHM_PREFIX) + to_string(bind_to_core_id);
   shm_unlink(name.c_str());
 }
 /* ── end SQLCOM SHM cleanup ─────────────────────────────────────── */
@@ -2115,7 +2123,7 @@ EXP_ST void setup_shm(void)
      Must be created BEFORE shm_env.txt is written, so run_parallel.py
      can pass SQLCOM_SHM_NAME to mysqld only after the segment exists. */
   {
-    string shm_name = string("/sqlcom_") + to_string(bind_to_core_id);
+    string shm_name = string(SQLCOM_SHM_PREFIX) + to_string(bind_to_core_id);
     shm_unlink(shm_name.c_str()); /* remove any stale segment */
     int sfd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, 0600);
     if (sfd < 0) PFATAL("shm_open() for SQLCOM SHM failed");
@@ -6215,81 +6223,135 @@ inline void append_opt_stmts(vector<string>& query_str_vec, vector<string>& quer
 /* ── SQLCOM node weighting ──────────────────────────────────────────
  * load_node_sqlcom_mapping():
  *   Parses ./node_sqlcom_mapping.json (produced by rsg/node_mapper).
- *   Fills g_candidate_nodes (nodes eligible for weighted picking) and
- *   g_node_to_sqlcom (node → dominant SQLCOM integer).
- *   Excludes nodes whose dominant_sqlcom == -1 (unmapped / blacklisted)
- *   and the three fixed-slot nodes always generated at specific indices.
+ *   Builds g_sqlcom_slots: exactly one slot per reachable SQLCOM
+ *   (excluding SQLCOM_END=159 and fixed-slot nodes).
+ *
+ *   For each top-level "mappings" entry, every valid sqlcom_value
+ *   gets the entry's node name added to the corresponding slot's
+ *   roots[] list.  When a SQLCOM is reachable via multiple top-level
+ *   nodes (e.g. SQLCOM_SHOW_FIELDS via describe_stmt and
+ *   show_columns_stmt), all roots appear in roots[].
+ *
+ *   diff_mappings data is not loaded at runtime — it was only needed
+ *   during the node_mapper analysis.  All diff parent_roots are
+ *   already present as top-level nodes, so no new roots are added.
  *
  * pick_weighted_node():
  *   Adaptive inverse weighting: weight = 1 / (exec_count[sqlcom] + 1).
  *   Under-exercised SQLCOMs get proportionally more selections.
- *   Falls back to "simple_statement" if candidate pool is empty.
+ *   When a slot has multiple roots, one is chosen uniformly via UR().
+ *   Falls back to "simple_statement" if slot pool is empty.
  * ──────────────────────────────────────────────────────────────────── */
 static void load_node_sqlcom_mapping() {
   static const set<string> FIXED_SLOTS = {
     "create_table_stmt", "insert_stmt", "select_stmt"
   };
+
   ifstream f("./node_sqlcom_mapping.json");
   if (!f.is_open()) {
     fprintf(stderr, "[SQLCOM] WARNING: ./node_sqlcom_mapping.json not found, "
                     "falling back to simple_statement only.\n");
     return;
   }
+
+  /* Intermediate: sqlcom_int → set of rsg_root names.
+   * We parse "mappings" only; diff_mappings add no new roots. */
+  unordered_map<int, set<string>> sc_to_roots;
+
   string line, cur_node;
-  int cur_sqlcom = -2; /* -2 = "not yet parsed for this object" */
+  bool   in_sqlcom_values = false;
+
   while (getline(f, line)) {
-    /* Scan for "node": "NAME" */
+    /* Stop at diff_mappings section */
+    if (line.find("\"diff_mappings\"") != string::npos) break;
+
+    /* "node": "NAME" */
     size_t np = line.find("\"node\":");
     if (np != string::npos) {
       size_t q1 = line.find('"', np + 7);
       if (q1 != string::npos) {
         size_t q2 = line.find('"', q1 + 1);
         if (q2 != string::npos) {
-          cur_node   = line.substr(q1 + 1, q2 - q1 - 1);
-          cur_sqlcom = -2;
+          cur_node         = line.substr(q1 + 1, q2 - q1 - 1);
+          in_sqlcom_values = false;
         }
       }
+      continue;
     }
-    /* Scan for "dominant_sqlcom": N  (first occurrence per object) */
-    size_t dp = line.find("\"dominant_sqlcom\":");
-    if (dp != string::npos && !cur_node.empty() && cur_sqlcom == -2) {
-      size_t vs = line.find(':', dp + 17);
-      if (vs != string::npos) {
-        vs++; /* skip ':' */
-        while (vs < line.size() && isspace((unsigned char)line[vs])) vs++;
-        size_t ve = vs;
-        if (ve < line.size() && line[ve] == '-') ve++;
-        while (ve < line.size() && isdigit((unsigned char)line[ve])) ve++;
-        try { cur_sqlcom = stoi(line.substr(vs, ve - vs)); }
-        catch (...) { cur_sqlcom = -1; }
-        if (cur_sqlcom >= 0 && FIXED_SLOTS.find(cur_node) == FIXED_SLOTS.end()) {
-          g_node_to_sqlcom[cur_node] = cur_sqlcom;
-          g_candidate_nodes.push_back(cur_node);
-        }
+
+    if (cur_node.empty()) continue;
+
+    /* "sqlcom_values": [ ... ] — may span multiple lines */
+    size_t sv = line.find("\"sqlcom_values\":");
+    if (sv != string::npos) {
+      if (line.find("null", sv) != string::npos) {
         cur_node.clear();
+        continue;
       }
+      in_sqlcom_values = (line.find('[', sv) != string::npos);
+    }
+
+    if (!in_sqlcom_values) continue;
+    if (line.find(']') != string::npos) in_sqlcom_values = false;
+
+    /* Extract integers from this line */
+    size_t pos = 0;
+    while (pos < line.size()) {
+      while (pos < line.size() && !isdigit((unsigned char)line[pos])) pos++;
+      if (pos >= line.size()) break;
+      size_t end = pos;
+      while (end < line.size() && isdigit((unsigned char)line[end])) end++;
+      int val = -1;
+      try { val = stoi(line.substr(pos, end - pos)); }
+      catch (...) {}
+      if (val >= 0 && val < MAX_SQLCOM
+          && FIXED_SLOTS.find(cur_node) == FIXED_SLOTS.end()) {
+        sc_to_roots[val].insert(cur_node);
+      }
+      pos = end;
     }
   }
-  fprintf(stderr, "[SQLCOM] Loaded %zu candidate nodes from mapping.\n",
-          g_candidate_nodes.size());
+
+  /* Convert map → g_sqlcom_slots vector (one slot per SQLCOM). */
+  for (auto &kv : sc_to_roots) {
+    SqlcomSlot slot;
+    slot.sqlcom_int = kv.first;
+    for (auto &r : kv.second) slot.roots.push_back(r);
+    g_sqlcom_slots.push_back(slot);
+  }
+
+  fprintf(stderr,
+    "[SQLCOM] Loaded %zu SQLCOM slots (covering %zu unique grammar roots).\n",
+    g_sqlcom_slots.size(),
+    [&]() { set<string> s; for (auto &sl : g_sqlcom_slots)
+             for (auto &r : sl.roots) s.insert(r); return s.size(); }());
 }
 
 static string pick_weighted_node() {
-  if (g_candidate_nodes.empty()) return "simple_statement";
+  if (g_sqlcom_slots.empty()) return "simple_statement";
+
+  /* Inverse-frequency weighting: w = 1 / (exec_count + 1). */
   double total_weight = 0.0;
-  vector<double> weights(g_candidate_nodes.size());
-  for (size_t i = 0; i < g_candidate_nodes.size(); i++) {
-    u64 cnt = sqlcom_exec_count[g_node_to_sqlcom[g_candidate_nodes[i]]];
+  vector<double> weights(g_sqlcom_slots.size());
+  for (size_t i = 0; i < g_sqlcom_slots.size(); i++) {
+    u64 cnt = sqlcom_exec_count[g_sqlcom_slots[i].sqlcom_int];
     weights[i]    = 1.0 / (double)(cnt + 1);
     total_weight += weights[i];
   }
-  double r = ((double)rand() / (double)RAND_MAX) * total_weight;
+
+  /* Weighted random pick using UR(). */
+  double r = ((double)UR(10000) / 10000.0) * total_weight;
   double cumulative = 0.0;
-  for (size_t i = 0; i < g_candidate_nodes.size(); i++) {
+  size_t chosen = g_sqlcom_slots.size() - 1;
+  for (size_t i = 0; i < g_sqlcom_slots.size(); i++) {
     cumulative += weights[i];
-    if (r <= cumulative) return g_candidate_nodes[i];
+    if (r <= cumulative) { chosen = i; break; }
   }
-  return g_candidate_nodes.back();
+
+  /* If the chosen slot has multiple roots, pick one uniformly. */
+  const auto &roots = g_sqlcom_slots[chosen].roots;
+  if (roots.size() == 1) return roots[0];
+  return roots[UR((u32)roots.size())];
 }
 /* ── end SQLCOM node weighting ─────────────────────────────────── */
 

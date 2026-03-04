@@ -273,6 +273,14 @@
 
 #define SHM_ENV_VAR         "__AFL_SHM_ID"
 
+/* Environment variable used to pass SQLCOM SHM name to mysqld. */
+
+#define SQLCOM_SHM_ENV_VAR  "SQLCOM_SHM_NAME"
+
+/* POSIX SHM name prefix for SQLCOM feedback (suffixed with core id). */
+
+#define SQLCOM_SHM_PREFIX   "/sqlcom_"
+
 /* Maximum number of SQLCOM values (SQLCOM_END + 1). */
 #define MAX_SQLCOM          161
 

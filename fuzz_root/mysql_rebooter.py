@@ -11,6 +11,10 @@ import MySQLdb
 
 from afl_config import *
 
+# Must match SQLCOM_SHM_ENV_VAR / SQLCOM_SHM_PREFIX in AFL/config.h
+SQLCOM_SHM_ENV_VAR = "SQLCOM_SHM_NAME"
+SQLCOM_SHM_PREFIX  = "/sqlcom_"
+
 print("Running mysql_rebooter.py script in mktime: %d" % (time.mktime(time.localtime())))
 
 is_restarted_mysql = False
@@ -156,8 +160,11 @@ for cur_inst_id,_ in all_mysql_p_list.items():
     ]
     mysql_modi_env = dict()
     mysql_modi_env["__AFL_SHM_ID"] = cur_shm_str
+    mysql_modi_env[SQLCOM_SHM_ENV_VAR] = SQLCOM_SHM_PREFIX + str(cur_inst_id)
     mysql_command = " ".join(mysql_command)
-    print("Running mysql command: __AFL_SHM_ID=" + cur_shm_str + " " + mysql_command, end="\n")
+    print("Running mysql command: __AFL_SHM_ID=" + cur_shm_str
+          + " " + SQLCOM_SHM_ENV_VAR + "=" + SQLCOM_SHM_PREFIX + str(cur_inst_id)
+          + " " + mysql_command, end="\n")
     p = subprocess.Popen(
                         mysql_command,
                         shell=True,
