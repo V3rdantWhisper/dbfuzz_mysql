@@ -91,6 +91,9 @@ MYSQL_PASS       ?=
 MYSQL_DB         ?= node_mapper_db
 SETUP_SCRIPT     ?= ./setup_mysql.sh
 MAX_QUICK_RETRIES ?= 3
+# Differential testing flags (only active when DIFF_TEST=true)
+DIFF_TEST        ?= true
+DIFF_N           ?= 20
 
 .PHONY: run
 run: all
@@ -110,7 +113,9 @@ run: all
 		-password          "$(MYSQL_PASS)"        \
 		-database          "$(MYSQL_DB)"          \
 		-setup-script      "$(SETUP_SCRIPT)"      \
-		-max-quick-retries "$(MAX_QUICK_RETRIES)" 
+		-max-quick-retries "$(MAX_QUICK_RETRIES)" \
+		$(if $(filter true,$(DIFF_TEST)),-diff-test) \
+		-diff-n            "$(DIFF_N)"
 
 .PHONY: help
 help:
@@ -122,15 +127,17 @@ help:
 	@echo "  clean        Remove built binaries"
 	@echo ""
 	@echo "Variables (override on command line):"
-	@echo "  LOG_FILE     mysqld stderr log path  (default: /tmp/mysql_stderr.log)"
-	@echo "  GRAMMAR      MySQL .y grammar file   (default: ../parser_def_files/mysql_sql.y)"
-	@echo "  OUTPUT       JSON output file        (default: ./node_sqlcom_mapping.json)"
-	@echo "  N            Queries per node        (default: 200)"
-	@echo "  DEPTH        RSG depth               (default: 2)"
-	@echo "  MYSQL_HOST   MySQL host              (default: 127.0.0.1)"
-	@echo "  MYSQL_PORT   MySQL port              (default: 3306)"
-	@echo "  MYSQL_USER   MySQL user              (default: root)"
-	@echo "  MYSQL_PASS   MySQL password          (default: empty)"
-	@echo "  MYSQL_DB          Working database        (default: node_mapper_db)"
-	@echo "  SETUP_SCRIPT      Path to setup_mysql.sh  (default: ./setup_mysql.sh)"
+	@echo "  LOG_FILE          mysqld stderr log path   (default: /tmp/mysql_stderr.log)"
+	@echo "  GRAMMAR           MySQL .y grammar file    (default: ../parser_def_files/mysql_sql.y)"
+	@echo "  OUTPUT            JSON output file         (default: ./node_sqlcom_mapping.json)"
+	@echo "  N                 Queries per node         (default: 200)"
+	@echo "  DEPTH             RSG depth                (default: 2)"
+	@echo "  MYSQL_HOST        MySQL host               (default: 127.0.0.1)"
+	@echo "  MYSQL_PORT        MySQL port               (default: 3306)"
+	@echo "  MYSQL_USER        MySQL user               (default: root)"
+	@echo "  MYSQL_PASS        MySQL password           (default: empty)"
+	@echo "  MYSQL_DB          Working database         (default: node_mapper_db)"
+	@echo "  SETUP_SCRIPT      Path to setup_mysql.sh   (default: ./setup_mysql.sh)"
 	@echo "  MAX_QUICK_RETRIES Reconnects before restart (default: 3)"
+	@echo "  DIFF_TEST         Enable differential testing (default: false; set to 'true')"
+	@echo "  DIFF_N            Queries per direction for differential testing (default: 20)"

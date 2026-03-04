@@ -257,8 +257,41 @@ type OutputJSON struct {
 	GeneratedAt    string              `json:"generated_at"`
 	GrammarFile    string              `json:"grammar_file"`
 	QueriesPerNode int                 `json:"queries_per_node"`
-	Mappings       []MappingEntry      `json:"mappings"`        // ordered by node name
-	SqlcomToNodes  map[string][]string `json:"sqlcom_to_nodes"` // sqlcom_name → []node
+	Mappings       []MappingEntry      `json:"mappings"`                // ordered by node name
+	DiffMappings   []DiffResult        `json:"diff_mappings,omitempty"` // differential node analysis
+	SqlcomToNodes  map[string][]string `json:"sqlcom_to_nodes"`         // sqlcom_name → []node
+}
+
+// ---------------------------------------------------------------------------
+// Differential testing types
+// ---------------------------------------------------------------------------
+
+// DiffSpec describes how to differentially test one non-top-level grammar node.
+// Two query sets are generated from ParentRoot:
+//   - queries whose SQL text contains Discriminator  → the node IS exercised
+//   - queries whose SQL text omits  Discriminator    → the node is NOT exercised
+//
+// Comparing the SQLCOM distributions of the two sets reveals what SQL command
+// values the grammar node contributes.
+type DiffSpec struct {
+	TargetNode    string // grammar rule being differentially tested
+	ParentRoot    string // simple_statement direct child used as generator root
+	Discriminator string // SQL keyword that signals TargetNode is exercised
+}
+
+// DiffResult records the differential analysis outcome for one grammar node.
+type DiffResult struct {
+	Node           string   `json:"node"`
+	ParentRoot     string   `json:"parent_root"`
+	Discriminator  string   `json:"discriminator"`
+	WithSqlcoms    []string `json:"with_sqlcoms"`    // SQLCOM names observed when node IS exercised
+	WithoutSqlcoms []string `json:"without_sqlcoms"` // SQLCOM names when node is absent
+	OnlyInWith     []string `json:"only_in_with"`    // exclusive to "with" direction
+	OnlyInWithout  []string `json:"only_in_without"` // exclusive to "without" direction
+	WithTotal      int      `json:"with_total"`
+	WithValid      int      `json:"with_valid"`
+	WithoutTotal   int      `json:"without_total"`
+	WithoutValid   int      `json:"without_valid"`
 }
 
 // ---------------------------------------------------------------------------
@@ -288,6 +321,204 @@ func directChildren(allProds map[string][]*yacc.ExpressionNode, ruleName string)
 }
 
 // ---------------------------------------------------------------------------
+// Differential testing — grammar analysis helpers
+// ---------------------------------------------------------------------------
+
+// buildChildToParents constructs a reverse dependency map over the grammar:
+// for every grammar rule R, childToParents[R] is the list of rules whose
+// productions reference R.  Only non-terminal references are recorded
+// (keyword tokens that are not in allProds are skipped).
+func buildChildToParents(allProds map[string][]*yacc.ExpressionNode) map[string][]string {
+	seenEdge := make(map[string]bool)
+	parentOf := make(map[string][]string)
+	for ruleName, prods := range allProds {
+		for _, prod := range prods {
+			for _, item := range prod.Items {
+				if item.Typ != yacc.TypToken {
+					continue // literal like '(' or ')'
+				}
+				child := item.Value
+				if _, isRule := allProds[child]; !isRule {
+					continue // keyword terminal, not a rule reference
+				}
+				key := child + "\x00" + ruleName
+				if !seenEdge[key] {
+					seenEdge[key] = true
+					parentOf[child] = append(parentOf[child], ruleName)
+				}
+			}
+		}
+	}
+	return parentOf
+}
+
+// findTopLevelAncestor returns the first node in topLevelSet that is reachable
+// by BFS-ing upward through parentOf from targetNode.
+// Returns "" if no such ancestor exists (node is unreachable from the top level).
+func findTopLevelAncestor(parentOf map[string][]string, topLevelSet map[string]bool, targetNode string) string {
+	visited := map[string]bool{targetNode: true}
+	queue := []string{targetNode}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		for _, parent := range parentOf[cur] {
+			if topLevelSet[parent] {
+				return parent
+			}
+			if !visited[parent] {
+				visited[parent] = true
+				queue = append(queue, parent)
+			}
+		}
+	}
+	return ""
+}
+
+// isKeywordLike returns true for words that look like SQL keywords:
+// all uppercase ASCII letters, length ≥ 2.
+// This is used to identify meaningful tokens in RSG-generated SQL fragments.
+func isKeywordLike(word string) bool {
+	if len(word) < 2 {
+		return false
+	}
+	for _, c := range word {
+		if c < 'A' || c > 'Z' {
+			return false
+		}
+	}
+	return true
+}
+
+// extractDiscriminator generates up to numSamples SQL fragments from targetNode
+// using the RSG and returns the SQL keyword that appears most consistently
+// across those fragments.  When counts tie, the keyword with the smallest
+// cumulative first-position index (i.e. that tends to appear earliest) wins.
+// Returns "" if no reliable discriminator can be found (too few samples or no
+// consistent keyword).
+func extractDiscriminator(rsg *SimpleRSG, targetNode string, depth int) string {
+	const (
+		numSamples  = 20
+		maxAttempts = 200
+	)
+	type wordStat struct {
+		count    int
+		totalPos int // sum of 0-based positions; smaller = appears earlier on average
+	}
+
+	nonEmptyCount := 0
+	stats := make(map[string]*wordStat)
+
+	for attempt := 0; attempt < maxAttempts && nonEmptyCount < numSamples; attempt++ {
+		sql := rsg.GenerateSQL(targetNode, depth)
+		if sql == "" {
+			continue
+		}
+		sql = strings.TrimSpace(strings.ToUpper(sql))
+		if sql == "" {
+			continue
+		}
+		nonEmptyCount++
+
+		seen := make(map[string]int) // word → first position in this fragment
+		for i, word := range strings.Fields(sql) {
+			if !isKeywordLike(word) {
+				continue
+			}
+			if _, already := seen[word]; !already {
+				seen[word] = i
+			}
+		}
+		for word, pos := range seen {
+			if stats[word] == nil {
+				stats[word] = &wordStat{}
+			}
+			stats[word].count++
+			stats[word].totalPos += pos
+		}
+	}
+
+	if nonEmptyCount < 2 {
+		return "" // not enough samples
+	}
+
+	// A keyword must appear in at least half the non-empty fragments.
+	threshold := nonEmptyCount / 2
+	if threshold < 1 {
+		threshold = 1
+	}
+
+	best := ""
+	bestCount := 0
+	bestPos := 1 << 30 // sentinel large value
+
+	for word, ws := range stats {
+		if ws.count < threshold {
+			continue
+		}
+		// Prefer higher count; break ties by lower (earlier) total position.
+		if ws.count > bestCount || (ws.count == bestCount && ws.totalPos < bestPos) {
+			best = word
+			bestCount = ws.count
+			bestPos = ws.totalPos
+		}
+	}
+	return best
+}
+
+// buildDiffSpecs analyses the grammar and builds a DiffSpec for every grammar
+// rule that satisfies all of:
+//  1. It is NOT one of the simple_statement direct children (those are already
+//     probed via the regular generateQueries path).
+//  2. It has a reachable simple_statement-child ancestor in the grammar graph.
+//  3. The RSG can generate at least two non-empty fragments from it.
+//  4. A consistent discriminating keyword can be extracted from those fragments.
+func buildDiffSpecs(rsg *SimpleRSG, allProds map[string][]*yacc.ExpressionNode, topLevelRoots []string, depth int) []DiffSpec {
+	topLevelSet := make(map[string]bool, len(topLevelRoots))
+	for _, r := range topLevelRoots {
+		topLevelSet[r] = true
+	}
+
+	parentOf := buildChildToParents(allProds)
+
+	// Sort all node names for determinism.
+	allNodes := make([]string, 0, len(allProds))
+	for name := range allProds {
+		allNodes = append(allNodes, name)
+	}
+	sort.Strings(allNodes)
+
+	var specs []DiffSpec
+	for _, node := range allNodes {
+		// Skip top-level nodes (tested directly) and the root rule itself.
+		if topLevelSet[node] {
+			continue
+		}
+		if node == "simple_statement" || node == "simple_statement_or_begin" {
+			continue
+		}
+
+		ancestor := findTopLevelAncestor(parentOf, topLevelSet, node)
+		if ancestor == "" {
+			continue // unreachable from any simple_statement child
+		}
+
+		discriminator := extractDiscriminator(rsg, node, depth)
+		if discriminator == "" {
+			continue // RSG cannot generate fragments or no consistent keyword
+		}
+
+		specs = append(specs, DiffSpec{
+			TargetNode:    node,
+			ParentRoot:    ancestor,
+			Discriminator: discriminator,
+		})
+	}
+
+	log.Printf("[info] differential test: %d specs from %d grammar rules", len(specs), len(allNodes))
+	return specs
+}
+
+// ---------------------------------------------------------------------------
 // SQL generation
 // ---------------------------------------------------------------------------
 
@@ -313,6 +544,49 @@ func generateQueries(rsg *SimpleRSG, roots []string, n, depth int) []QueryRecord
 			log.Printf("[warn] node %q: could not generate any SQL in %d attempts (blacklisted or invalid root?)", root, maxAttempts)
 		} else {
 			log.Printf("[info] node %q: generated %d queries (%d attempts)", root, generated, attempts)
+		}
+	}
+	return records
+}
+
+// generateDiffQueries generates two query batches per DiffSpec:
+//   - n queries from spec.ParentRoot whose SQL text contains spec.Discriminator
+//     (labelled "targetNode:WITH")
+//   - n queries from spec.ParentRoot whose SQL text does NOT contain it
+//     (labelled "targetNode:WITHOUT")
+//
+// Up to n*200 generation attempts are made per direction; specs where the
+// discriminator is always (or never) present will simply produce fewer results.
+func generateDiffQueries(rsg *SimpleRSG, specs []DiffSpec, n, depth int) []QueryRecord {
+	const maxMultiplier = 200
+	var records []QueryRecord
+
+	for _, spec := range specs {
+		discUpper := strings.ToUpper(spec.Discriminator)
+		withLabel := spec.TargetNode + ":WITH"
+		withoutLabel := spec.TargetNode + ":WITHOUT"
+		maxAttempts := n * maxMultiplier
+
+		withCount, withoutCount := 0, 0
+		for attempts := 0; attempts < maxAttempts && (withCount < n || withoutCount < n); attempts++ {
+			sql := rsg.GenerateSQL(spec.ParentRoot, depth)
+			if sql == "" {
+				continue
+			}
+			if strings.Contains(strings.ToUpper(sql), discUpper) {
+				if withCount < n {
+					records = append(records, QueryRecord{Node: withLabel, SQL: sql})
+					withCount++
+				}
+			} else {
+				if withoutCount < n {
+					records = append(records, QueryRecord{Node: withoutLabel, SQL: sql})
+					withoutCount++
+				}
+			}
+		}
+		if withCount == 0 {
+			log.Printf("[warn] diff %q: 0 WITH queries (disc=%q parent=%q)", spec.TargetNode, spec.Discriminator, spec.ParentRoot)
 		}
 	}
 	return records
@@ -494,6 +768,104 @@ func buildSqlcomToNodes(entries []MappingEntry) map[string][]string {
 }
 
 // ---------------------------------------------------------------------------
+// Differential mapping construction
+// ---------------------------------------------------------------------------
+
+// buildDiffMapping processes executor results whose node labels contain ":"
+// (i.e. produced by generateDiffQueries) and returns one DiffResult per spec
+// that has at least one valid ("normal") result in either direction.
+func buildDiffMapping(results []ExecResult, specs []DiffSpec) []DiffResult {
+	type dirStats struct {
+		total  int
+		valid  int
+		sqlcom map[int]bool
+	}
+
+	withStats := make(map[string]*dirStats, len(specs))
+	withoutStats := make(map[string]*dirStats, len(specs))
+	for _, spec := range specs {
+		withStats[spec.TargetNode] = &dirStats{sqlcom: make(map[int]bool)}
+		withoutStats[spec.TargetNode] = &dirStats{sqlcom: make(map[int]bool)}
+	}
+
+	for _, res := range results {
+		node := res.Node
+		var ds *dirStats
+		var target string
+		switch {
+		case strings.HasSuffix(node, ":WITH"):
+			target = node[:len(node)-5]
+			ds = withStats[target]
+		case strings.HasSuffix(node, ":WITHOUT"):
+			target = node[:len(node)-8]
+			ds = withoutStats[target]
+		}
+		if ds == nil {
+			continue
+		}
+		ds.total++
+		if res.Status == "normal" {
+			ds.valid++
+			if res.Sqlcom >= 0 {
+				ds.sqlcom[res.Sqlcom] = true
+			}
+		}
+	}
+
+	var out []DiffResult
+	for _, spec := range specs {
+		ws := withStats[spec.TargetNode]
+		wos := withoutStats[spec.TargetNode]
+		if ws.valid+wos.valid == 0 {
+			continue // no useful data
+		}
+		withNames := sqlcomSetToNames(ws.sqlcom)
+		withoutNames := sqlcomSetToNames(wos.sqlcom)
+		out = append(out, DiffResult{
+			Node:           spec.TargetNode,
+			ParentRoot:     spec.ParentRoot,
+			Discriminator:  spec.Discriminator,
+			WithSqlcoms:    withNames,
+			WithoutSqlcoms: withoutNames,
+			OnlyInWith:     setDifference(withNames, withoutNames),
+			OnlyInWithout:  setDifference(withoutNames, withNames),
+			WithTotal:      ws.total,
+			WithValid:      ws.valid,
+			WithoutTotal:   wos.total,
+			WithoutValid:   wos.valid,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Node < out[j].Node })
+	return out
+}
+
+// sqlcomSetToNames converts a set of sqlcom integer keys to sorted name strings.
+func sqlcomSetToNames(s map[int]bool) []string {
+	var names []string
+	for v := range s {
+		names = append(names, sqlcomName(v))
+	}
+	sort.Strings(names)
+	return names
+}
+
+// setDifference returns elements present in a but absent from b (both sorted).
+func setDifference(a, b []string) []string {
+	bSet := make(map[string]bool, len(b))
+	for _, v := range b {
+		bSet[v] = true
+	}
+	var diff []string
+	for _, v := range a {
+		if !bSet[v] {
+			diff = append(diff, v)
+		}
+	}
+	sort.Strings(diff)
+	return diff
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -515,6 +887,8 @@ func main() {
 	pollTimeoutMs := flag.Int("poll-timeout-ms", 100, "Max ms to wait for SQLCOM_EXEC in mysqld stderr log")
 	setupScript := flag.String("setup-script", "./setup_mysql.sh", "Path to setup_mysql.sh for mysqld restart on hard failures")
 	maxQuickRetries := flag.Int("max-quick-retries", 3, "Reconnect attempts before triggering mysqld restart")
+	diffTest := flag.Bool("diff-test", false, "Enable differential testing for all non-top-level grammar nodes")
+	diffN := flag.Int("diff-n", 20, "SQL queries per node per direction for differential testing")
 	flag.Parse()
 
 	if *seed == 0 {
@@ -549,6 +923,10 @@ func main() {
 	roots := directChildren(rsg.allProds, "simple_statement")
 	log.Printf("[info] found %d direct children of simple_statement", len(roots))
 
+	// begin_stmt is a child of simple_statement_or_begin but NOT of
+	// simple_statement itself; add it explicitly so BEGIN is always probed.
+	roots = append(roots, "begin_stmt")
+
 	// Append any caller-supplied extra roots.
 	if *extraRoots != "" {
 		for _, er := range strings.Split(*extraRoots, ",") {
@@ -571,13 +949,25 @@ func main() {
 	log.Printf("[info] total root nodes to probe: %d", len(roots))
 
 	// -----------------------------------------------------------------------
-	// 4. Generate SQL queries.
+	// 4. Generate SQL queries (regular + differential).
 	// -----------------------------------------------------------------------
 	log.Printf("[info] generating %d queries per node (depth=%d, seed=%d) …", *nQueries, *depth, *seed)
-	// Re-seed with a fresh source so each node probing run is independent.
 	rsg.rng = rand.New(rand.NewSource(*seed))
 	records := generateQueries(rsg, roots, *nQueries, *depth)
-	log.Printf("[info] total queries generated: %d", len(records))
+	log.Printf("[info] regular queries generated: %d", len(records))
+
+	// Build differential specs and generate WITH/WITHOUT pairs if requested.
+	var diffSpecs []DiffSpec
+	if *diffTest {
+		log.Printf("[info] building differential test specs (this may take a minute) …")
+		diffSpecs = buildDiffSpecs(rsg, rsg.allProds, roots, *depth)
+		diffRecords := generateDiffQueries(rsg, diffSpecs, *diffN, *depth)
+		log.Printf("[info] differential queries generated: %d (%d specs, %d per direction)",
+			len(diffRecords), len(diffSpecs), *diffN)
+		records = append(records, diffRecords...)
+	}
+
+	log.Printf("[info] total queries written to TSV: %d", len(records))
 
 	if err := writeQueriesFile(*queriesFile, records); err != nil {
 		log.Fatalf("cannot write queries file: %v", err)
@@ -588,7 +978,7 @@ func main() {
 	// 5. Run C++ executor.
 	// -----------------------------------------------------------------------
 	log.Printf("[info] running executor: %s", *executorBin)
-	results, err := runExecutor(
+	allResults, err := runExecutor(
 		*executorBin, *queriesFile, *logFile,
 		*setupScript, *host, *port, *user, *password, *database,
 		*pollTimeoutMs, *maxQuickRetries,
@@ -596,19 +986,40 @@ func main() {
 	if err != nil {
 		log.Fatalf("executor error: %v", err)
 	}
-	log.Printf("[info] executor returned %d results", len(results))
+	log.Printf("[info] executor returned %d results", len(allResults))
 
 	// -----------------------------------------------------------------------
-	// 6. Build and write the JSON mapping.
+	// 6. Split results: regular (no ":") vs differential (contains ":").
 	// -----------------------------------------------------------------------
-	entries := buildMapping(results, roots)
+	var regularResults []ExecResult
+	var diffResults []ExecResult
+	for _, r := range allResults {
+		if strings.Contains(r.Node, ":") {
+			diffResults = append(diffResults, r)
+		} else {
+			regularResults = append(regularResults, r)
+		}
+	}
+	log.Printf("[info] regular results: %d  diff results: %d", len(regularResults), len(diffResults))
+
+	// -----------------------------------------------------------------------
+	// 7. Build and write the JSON mapping.
+	// -----------------------------------------------------------------------
+	entries := buildMapping(regularResults, roots)
 	sqlcomToNodes := buildSqlcomToNodes(entries)
+
+	var diffEntries []DiffResult
+	if *diffTest && len(diffSpecs) > 0 {
+		diffEntries = buildDiffMapping(diffResults, diffSpecs)
+		log.Printf("[info] differential mapping: %d nodes with results", len(diffEntries))
+	}
 
 	out := OutputJSON{
 		GeneratedAt:    time.Now().Format(time.RFC3339),
 		GrammarFile:    *grammarFile,
 		QueriesPerNode: *nQueries,
 		Mappings:       entries,
+		DiffMappings:   diffEntries,
 		SqlcomToNodes:  sqlcomToNodes,
 	}
 
@@ -626,6 +1037,15 @@ func main() {
 	for _, e := range entries {
 		if e.DominantSqlcom >= 0 {
 			fmt.Printf("  %-45s → %s\n", e.Node, e.DominantSqlcomName)
+		}
+	}
+	if len(diffEntries) > 0 {
+		fmt.Printf("\n=== Differential Node Analysis (%d nodes) ===\n", len(diffEntries))
+		for _, d := range diffEntries {
+			if len(d.OnlyInWith) > 0 {
+				fmt.Printf("  %-45s [disc=%-15s] only_in_with=%v\n",
+					d.Node, d.Discriminator, d.OnlyInWith)
+			}
 		}
 	}
 	fmt.Println()
