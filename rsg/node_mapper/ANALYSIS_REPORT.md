@@ -59,7 +59,7 @@
 | `rename` | RENAME_TABLE / RENAME_USER | `RENAME TABLE` 和 `RENAME USER` 共用 rename 节点 |
 | `create` | CREATE_DB / CREATE_FUNCTION / CREATE_USER / CREATE_VIEW / CREATE_TRIGGER / ALTER_TABLESPACE / CREATE_SERVER（7种） | `create` 是所有 CREATE 语句的公共前缀节点 |
 
-### 2.3 需要特别说明的映射（疑似异常，实为合理）
+### 2.3 需要特别说明的映射
 
 #### `alter_view_stmt` → `SQLCOM_CREATE_VIEW`
 

@@ -273,6 +273,9 @@
 
 #define SHM_ENV_VAR         "__AFL_SHM_ID"
 
+/* Maximum number of SQLCOM values (SQLCOM_END + 1). */
+#define MAX_SQLCOM          161
+
 /* Other less interesting, internal-only variables. */
 
 #define CLANG_ENV_VAR       "__AFL_CLANG_MODE"

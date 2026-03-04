@@ -77,6 +77,8 @@
 #include <deque>
 #include <random>
 #include <regex>
+#include <unordered_map>
+#include <set>
 
 #include <mutex>
 #include <chrono>
@@ -733,6 +735,16 @@ EXP_ST u8 *trace_bits; /* SHM with instrumentation bitmap  */
 static u8 var_bytes[MAP_SIZE]; /* Bytes that appear to be variable */
 
 static s32 shm_id; /* ID of the SHM region             */
+
+/* ── SQLCOM SHM feedback globals ───────────────────────────────── */
+static volatile int *g_sqlcom_shm    = nullptr; /* mmap'd POSIX SHM page */
+static u64  sqlcom_exec_count[MAX_SQLCOM];       /* per-SQLCOM exec counts */
+static u32  sqlcom_total_seen  = 0;              /* distinct SQLCOMs seen  */
+static int  last_sqlcom        = -1;             /* SQLCOM of last exec    */
+static u8   last_sqlcom_is_new = 0;              /* 1 if first time seen   */
+static unordered_map<string, int> g_node_to_sqlcom; /* node → dominant SQLCOM */
+static vector<string>             g_candidate_nodes; /* weighted pick pool  */
+/* ── end SQLCOM SHM feedback globals ───────────────────────────── */
 
 static volatile u8 stop_soon, /* Ctrl-C pressed?                  */
     clear_screen = 1,         /* Window resized?                  */
@@ -2060,6 +2072,13 @@ static void cull_queue(void)
   }
 }
 
+/* ── SQLCOM SHM cleanup (registered via atexit) ─────────────────── */
+static void remove_sqlcom_shm(void) {
+  string name = string("/sqlcom_") + to_string(bind_to_core_id);
+  shm_unlink(name.c_str());
+}
+/* ── end SQLCOM SHM cleanup ─────────────────────────────────────── */
+
 /* Configure shared memory and virgin_bits. This is called at startup. */
 
 EXP_ST void setup_shm(void)
@@ -2079,6 +2098,7 @@ EXP_ST void setup_shm(void)
     PFATAL("shmget() failed");
 
   atexit(remove_shm);
+  atexit(remove_sqlcom_shm);
 
   shm_str = alloc_printf("%d", shm_id);
 
@@ -2090,6 +2110,26 @@ EXP_ST void setup_shm(void)
   if (!dumb_mode)
     setenv(SHM_ENV_VAR, shm_str, 1);
   cerr << "SHM_ENV_VAR: " << shm_str << endl;
+
+  /* ── Create POSIX SHM for SQLCOM feedback ───────────────────────
+     Must be created BEFORE shm_env.txt is written, so run_parallel.py
+     can pass SQLCOM_SHM_NAME to mysqld only after the segment exists. */
+  {
+    string shm_name = string("/sqlcom_") + to_string(bind_to_core_id);
+    shm_unlink(shm_name.c_str()); /* remove any stale segment */
+    int sfd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, 0600);
+    if (sfd < 0) PFATAL("shm_open() for SQLCOM SHM failed");
+    if (ftruncate(sfd, sizeof(int)) < 0) PFATAL("ftruncate() for SQLCOM SHM failed");
+    void *sp = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, sfd, 0);
+    close(sfd);
+    if (sp == MAP_FAILED) PFATAL("mmap() for SQLCOM SHM failed");
+    g_sqlcom_shm = reinterpret_cast<volatile int *>(sp);
+    __atomic_store_n((int *)g_sqlcom_shm, -1, __ATOMIC_RELEASE);
+    memset(sqlcom_exec_count, 0, sizeof(sqlcom_exec_count));
+    sqlcom_total_seen = 0;
+    fprintf(stderr, "[SQLCOM] Created SHM segment %s\n", shm_name.c_str());
+  }
+  /* ── end POSIX SHM creation ─────────────────────────────────── */
 
   ofstream shm_env_out;
   shm_env_out.open("./shm_env.txt", ios::trunc | ios::out);
@@ -3089,6 +3129,9 @@ static u8 run_target(char **argv, u32 timeout, const string& cmd_string, const s
 
   memset(trace_bits, 0, MAP_SIZE);
   MEM_BARRIER();
+  /* SQLCOM feedback: sentinel reset — mysqld will overwrite with real value. */
+  if (g_sqlcom_shm)
+    __atomic_store_n((int *)g_sqlcom_shm, -1, __ATOMIC_RELEASE);
 BEGIN:
   auto result = g_mysqlclient.execute(cmd_string, full_valid_input, res_str);
 
@@ -3118,6 +3161,26 @@ BEGIN:
   }
 
   MEM_BARRIER();
+
+  /* SQLCOM feedback: read SQLCOM written by mysqld to shared memory.
+     By the time execute() returns, mysqld has already written the value
+     (the TCP response is sent after the SHM store in sql_parse.cc). */
+  if (g_sqlcom_shm) {
+    int sc = __atomic_load_n((int *)g_sqlcom_shm, __ATOMIC_ACQUIRE);
+    if (sc >= 0 && sc < MAX_SQLCOM) {
+      if (sqlcom_exec_count[sc] == 0) {
+        sqlcom_total_seen++;
+        last_sqlcom_is_new = 1;
+      } else {
+        last_sqlcom_is_new = 0;
+      }
+      sqlcom_exec_count[sc]++;
+      last_sqlcom = sc;
+    } else {
+      last_sqlcom_is_new = 0;
+      last_sqlcom        = -1;
+    }
+  }
 
   tb4 = *(u32 *)trace_bits;
 
@@ -3886,7 +3949,7 @@ static u8 save_if_interesting(char **argv, string &query_str, u8 fault,
     /* Always check has_new_bits first. */
 
     /* If no_new_bits, dropped. However, if disable_coverage_feedback is specified, ignore has_new_bits. */
-    if ( !(hnb = has_new_bits(virgin_bits, query_str)) && !disable_coverage_feedback) {
+    if ( !(hnb = has_new_bits(virgin_bits, query_str)) && !disable_coverage_feedback && !last_sqlcom_is_new) {
       rsg_exec_failed();
       if (crash_mode)
         total_crashes++;
@@ -6149,6 +6212,87 @@ inline void append_opt_stmts(vector<string>& query_str_vec, vector<string>& quer
     return;
 }
 
+/* ── SQLCOM node weighting ──────────────────────────────────────────
+ * load_node_sqlcom_mapping():
+ *   Parses ./node_sqlcom_mapping.json (produced by rsg/node_mapper).
+ *   Fills g_candidate_nodes (nodes eligible for weighted picking) and
+ *   g_node_to_sqlcom (node → dominant SQLCOM integer).
+ *   Excludes nodes whose dominant_sqlcom == -1 (unmapped / blacklisted)
+ *   and the three fixed-slot nodes always generated at specific indices.
+ *
+ * pick_weighted_node():
+ *   Adaptive inverse weighting: weight = 1 / (exec_count[sqlcom] + 1).
+ *   Under-exercised SQLCOMs get proportionally more selections.
+ *   Falls back to "simple_statement" if candidate pool is empty.
+ * ──────────────────────────────────────────────────────────────────── */
+static void load_node_sqlcom_mapping() {
+  static const set<string> FIXED_SLOTS = {
+    "create_table_stmt", "insert_stmt", "select_stmt"
+  };
+  ifstream f("./node_sqlcom_mapping.json");
+  if (!f.is_open()) {
+    fprintf(stderr, "[SQLCOM] WARNING: ./node_sqlcom_mapping.json not found, "
+                    "falling back to simple_statement only.\n");
+    return;
+  }
+  string line, cur_node;
+  int cur_sqlcom = -2; /* -2 = "not yet parsed for this object" */
+  while (getline(f, line)) {
+    /* Scan for "node": "NAME" */
+    size_t np = line.find("\"node\":");
+    if (np != string::npos) {
+      size_t q1 = line.find('"', np + 7);
+      if (q1 != string::npos) {
+        size_t q2 = line.find('"', q1 + 1);
+        if (q2 != string::npos) {
+          cur_node   = line.substr(q1 + 1, q2 - q1 - 1);
+          cur_sqlcom = -2;
+        }
+      }
+    }
+    /* Scan for "dominant_sqlcom": N  (first occurrence per object) */
+    size_t dp = line.find("\"dominant_sqlcom\":");
+    if (dp != string::npos && !cur_node.empty() && cur_sqlcom == -2) {
+      size_t vs = line.find(':', dp + 17);
+      if (vs != string::npos) {
+        vs++; /* skip ':' */
+        while (vs < line.size() && isspace((unsigned char)line[vs])) vs++;
+        size_t ve = vs;
+        if (ve < line.size() && line[ve] == '-') ve++;
+        while (ve < line.size() && isdigit((unsigned char)line[ve])) ve++;
+        try { cur_sqlcom = stoi(line.substr(vs, ve - vs)); }
+        catch (...) { cur_sqlcom = -1; }
+        if (cur_sqlcom >= 0 && FIXED_SLOTS.find(cur_node) == FIXED_SLOTS.end()) {
+          g_node_to_sqlcom[cur_node] = cur_sqlcom;
+          g_candidate_nodes.push_back(cur_node);
+        }
+        cur_node.clear();
+      }
+    }
+  }
+  fprintf(stderr, "[SQLCOM] Loaded %zu candidate nodes from mapping.\n",
+          g_candidate_nodes.size());
+}
+
+static string pick_weighted_node() {
+  if (g_candidate_nodes.empty()) return "simple_statement";
+  double total_weight = 0.0;
+  vector<double> weights(g_candidate_nodes.size());
+  for (size_t i = 0; i < g_candidate_nodes.size(); i++) {
+    u64 cnt = sqlcom_exec_count[g_node_to_sqlcom[g_candidate_nodes[i]]];
+    weights[i]    = 1.0 / (double)(cnt + 1);
+    total_weight += weights[i];
+  }
+  double r = ((double)rand() / (double)RAND_MAX) * total_weight;
+  double cumulative = 0.0;
+  for (size_t i = 0; i < g_candidate_nodes.size(); i++) {
+    cumulative += weights[i];
+    if (r <= cumulative) return g_candidate_nodes[i];
+  }
+  return g_candidate_nodes.back();
+}
+/* ── end SQLCOM node weighting ─────────────────────────────────── */
+
 string rsg_generate_query_sequence(int stmt_idx) {
     string res_query;
     if (stmt_idx < 3) {
@@ -6158,7 +6302,7 @@ string rsg_generate_query_sequence(int stmt_idx) {
         res_query += rsg_generate("insert_stmt") + "; \n";
     }
     else if (stmt_idx < 13) {
-        res_query += rsg_generate("simple_statement") + "; \n";
+        res_query += rsg_generate(pick_weighted_node()) + "; \n";
     } else {
         res_query += rsg_generate("select_stmt") + "; \n";
     }
@@ -7965,6 +8109,7 @@ int main(int argc, char *argv[])
 
   setup_post();
   setup_shm();
+  load_node_sqlcom_mapping(); /* SQLCOM feedback: load node→SQLCOM table */
   init_count_class16();
 
   setup_dirs_fds();

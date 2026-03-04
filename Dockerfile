@@ -77,9 +77,16 @@ RUN wget https://archives.boost.io/release/1.77.0/source/boost_1_77_0.tar.bz2 &&
 RUN wget https://github.com/mysql/mysql-server/archive/refs/tags/mysql-8.0.33.zip
 RUN unzip mysql-8.0.33.zip
 RUN mv mysql-server-mysql-8.0.33 mysql-server
+
+# Apply SQLCOM SHM feedback patch
+USER root
+COPY sqlcom_shm_feedback.patch /home/mysql/sqlcom_shm_feedback.patch
+RUN chown mysql:mysql /home/mysql/sqlcom_shm_feedback.patch
+USER mysql
+RUN patch -p1 -d /home/mysql/mysql-server < /home/mysql/sqlcom_shm_feedback.patch
+
 WORKDIR /home/mysql/mysql-server
 # MySQL version 8.0.33
-# RUN git checkout 3290a66c89eb1625a7058e0ef732432b6952b435 
 RUN mkdir bld
 WORKDIR /home/mysql/mysql-server/bld
 ENV CC=/home/mysql/AFL/afl-clang-fast
